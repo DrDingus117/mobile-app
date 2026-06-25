@@ -38,11 +38,19 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0bc3a496-99b2-48f4-8d07-11e0c6914031"
+      }
+    },
+    "owner": "drdingus117-goober-corp"
   }
 }
