@@ -1,0 +1,1 @@
+export type Breakpoint = 'phone' | 'tablet' | 'desktop'; ;
