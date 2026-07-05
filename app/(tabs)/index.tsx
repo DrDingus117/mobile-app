@@ -9,11 +9,10 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { Link } from 'expo-router';
 
 export default function HomeScreen() {
-  
-  const { isTablet, isDesktop } = useResponsive();
-  
+  const { isTablet, isLandscape } = useResponsive();
+
   return (
-   <ParallaxScrollView
+    <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         <Image
@@ -21,15 +20,35 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
+
+      <ThemedView
+        style={[
+          styles.titleContainer,
+          isTablet && styles.tabletContainer,
+          isLandscape && styles.landscapeContainer,
+        ]}>
+        <ThemedText
+          type="title"
+          accessibilityRole="header">
+          Welcome!
+        </ThemedText>
         <HelloWave />
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
+
+      <ThemedView
+        style={[
+          styles.stepContainer,
+          isTablet && styles.tabletContainer,
+          isLandscape && styles.landscapeContainer,
+        ]}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
+
         <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
+          Edit{' '}
+          <ThemedText type="defaultSemiBold">
+            app/(tabs)/index.tsx
+          </ThemedText>{' '}
+          to see changes. Press{' '}
           <ThemedText type="defaultSemiBold">
             {Platform.select({
               ios: 'cmd + d',
@@ -40,20 +59,42 @@ export default function HomeScreen() {
           to open developer tools.
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
+
+      <ThemedView
+        style={[
+          styles.stepContainer,
+          isTablet && styles.tabletContainer,
+          isLandscape && styles.landscapeContainer,
+        ]}>
+
+        <Link
+          href="/modal"
+          accessibilityRole="button"
+          accessibilityLabel="Open the Explore information">
+
           <Link.Trigger>
             <ThemedText type="subtitle">Step 2: Explore</ThemedText>
           </Link.Trigger>
+
           <Link.Preview />
+
           <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
+            <Link.MenuAction
+              title="Action"
+              icon="cube"
+              onPress={() => alert('Action pressed')}
+            />
+
             <Link.MenuAction
               title="Share"
               icon="square.and.arrow.up"
               onPress={() => alert('Share pressed')}
             />
-            <Link.Menu title="More" icon="ellipsis">
+
+            <Link.Menu
+              title="More"
+              icon="ellipsis">
+
               <Link.MenuAction
                 title="Delete"
                 icon="trash"
@@ -65,19 +106,33 @@ export default function HomeScreen() {
         </Link>
 
         <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+          Tap the Explore tab to learn more about what&apos;s included in this starter app.
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
+
+      <ThemedView
+        style={[
+          styles.stepContainer,
+          isTablet && styles.tabletContainer,
+          isLandscape && styles.landscapeContainer,
+        ]}>
+
         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
+
         <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+          When you&apos;re ready, run{' '}
+          <ThemedText type="defaultSemiBold">
+            npm run reset-project
+          </ThemedText>{' '}
+          to get a fresh{' '}
+          <ThemedText type="defaultSemiBold">
+            app
+          </ThemedText>{' '}
+          directory.
         </ThemedText>
+
       </ThemedView>
+
     </ParallaxScrollView>
   );
 }
@@ -88,10 +143,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+
   stepContainer: {
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
+
+  tabletContainer: {
+    maxWidth: 700,
+    alignSelf: 'center',
+    width: '100%',
+  },
+
+  landscapeContainer: {
+    paddingHorizontal: 24,
+  },
+
   reactLogo: {
     height: 178,
     width: 290,
