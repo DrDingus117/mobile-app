@@ -6,10 +6,11 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useResponsive } from '@/hooks/use-responsive';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const { isTablet, isLandscape } = useResponsive();
+  const router = useRouter();
 
   return (
     <ParallaxScrollView
@@ -27,9 +28,7 @@ export default function HomeScreen() {
           isTablet && styles.tabletContainer,
           isLandscape && styles.landscapeContainer,
         ]}>
-        <ThemedText
-          type="title"
-          accessibilityRole="header">
+        <ThemedText type="title" accessibilityRole="header">
           Welcome!
         </ThemedText>
         <HelloWave />
@@ -73,7 +72,9 @@ export default function HomeScreen() {
           accessibilityLabel="Open the Explore information">
 
           <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
+            <ThemedText type="subtitle">
+              Step 2: Explore
+            </ThemedText>
           </Link.Trigger>
 
           <Link.Preview />
@@ -91,10 +92,7 @@ export default function HomeScreen() {
               onPress={() => alert('Share pressed')}
             />
 
-            <Link.Menu
-              title="More"
-              icon="ellipsis">
-
+            <Link.Menu title="More" icon="ellipsis">
               <Link.MenuAction
                 title="Delete"
                 icon="trash"
@@ -108,6 +106,11 @@ export default function HomeScreen() {
         <ThemedText>
           Tap the Explore tab to learn more about what&apos;s included in this starter app.
         </ThemedText>
+
+        <ThemedText onPress={() => router.push('/demo')}>
+          Go to Demo
+        </ThemedText>
+
       </ThemedView>
 
       <ThemedView
@@ -117,7 +120,9 @@ export default function HomeScreen() {
           isLandscape && styles.landscapeContainer,
         ]}>
 
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
+        <ThemedText type="subtitle">
+          Step 3: Get a fresh start
+        </ThemedText>
 
         <ThemedText>
           When you&apos;re ready, run{' '}
