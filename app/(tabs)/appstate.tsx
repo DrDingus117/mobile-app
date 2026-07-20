@@ -1,25 +1,36 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    AppState,
-    AppStateStatus,
-    Button,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  AppState,
+  AppStateStatus,
+  Button,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 export default function AppStateScreen() {
   const [text, setText] = useState("");
   const [result, setResult] = useState("No data fetched yet.");
+  const [status, setStatus] = useState("Idle");
 
   const appState = useRef(AppState.currentState);
 
-  // Load saved text when the screen opens
+  // Load saved data when the screen opens
   useEffect(() => {
-    loadText();
+    loadData();
   }, []);
+
+  // Save text whenever it changes
+  useEffect(() => {
+    AsyncStorage.setItem("savedText", text);
+  }, [text]);
+
+  // Save fetched result whenever it changes
+  useEffect(() => {
+    AsyncStorage.setItem("savedResult", result);
+  }, [result]);
 
   // Listen for app state changes
   useEffect(() => {
@@ -36,36 +47,57 @@ export default function AppStateScreen() {
       appState.current === "active" &&
       (nextAppState === "background" || nextAppState === "inactive")
     ) {
-      await AsyncStorage.setItem("savedText", text);
+      setStatus("Paused");
     }
 
     if (
       appState.current.match(/inactive|background/) &&
       nextAppState === "active"
     ) {
-      loadText();
+      await loadData();
+      setStatus("Resumed");
     }
 
     appState.current = nextAppState;
   };
 
-  const loadText = async () => {
-    const savedText = await AsyncStorage.getItem("savedText");
+  const loadData = async () => {
+    try {
+      const savedText = await AsyncStorage.getItem("savedText");
+      const savedResult = await AsyncStorage.getItem("savedResult");
 
-    if (savedText !== null) {
-      setText(savedText);
+      if (savedText !== null) {
+        setText(savedText);
+      }
+
+      if (savedResult !== null) {
+        setResult(savedResult);
+      }
+    } catch (e) {
+      console.log("Error loading data:", e);
     }
   };
 
   const fetchData = async () => {
+    setStatus("Fetching...");
+
     try {
       const response = await fetch(
         "https://jsonplaceholder.typicode.com/todos/1"
       );
+
       const data = await response.json();
+
       setResult(data.title);
+
+      // Save immediately
+      await AsyncStorage.setItem("savedText", text);
+      await AsyncStorage.setItem("savedResult", data.title);
+
+      setStatus("Finished");
     } catch (error) {
       setResult("Failed to fetch data.");
+      setStatus("Failed");
     }
   };
 
@@ -88,6 +120,10 @@ export default function AppStateScreen() {
       </View>
 
       <Text style={styles.text}>Fetched: {result}</Text>
+
+      <Text style={styles.text}>Status: {status}</Text>
+
+      <Text style={styles.text}>App State: {appState.current}</Text>
     </View>
   );
 }
