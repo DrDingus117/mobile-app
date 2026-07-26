@@ -16,10 +16,16 @@ export default function AppStateScreen() {
   const [status, setStatus] = useState("Idle");
 
   const appState = useRef(AppState.currentState);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load saved data when the screen opens
+  // Load saved data and start polling
   useEffect(() => {
     loadData();
+    startPolling();
+
+    return () => {
+      stopPolling();
+    };
   }, []);
 
   // Save text whenever it changes
@@ -47,6 +53,7 @@ export default function AppStateScreen() {
       appState.current === "active" &&
       (nextAppState === "background" || nextAppState === "inactive")
     ) {
+      stopPolling();
       setStatus("Paused");
     }
 
@@ -55,10 +62,26 @@ export default function AppStateScreen() {
       nextAppState === "active"
     ) {
       await loadData();
+      startPolling();
       setStatus("Resumed");
     }
 
     appState.current = nextAppState;
+  };
+
+  const startPolling = () => {
+    if (pollingRef.current) return;
+
+    pollingRef.current = setInterval(() => {
+      fetchData();
+    }, 5000);
+  };
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
   };
 
   const loadData = async () => {
@@ -79,7 +102,7 @@ export default function AppStateScreen() {
   };
 
   const fetchData = async () => {
-    setStatus("Fetching...");
+    setStatus("Fetching... " + new Date().toLocaleTimeString());
 
     try {
       const response = await fetch(
@@ -90,14 +113,13 @@ export default function AppStateScreen() {
 
       setResult(data.title);
 
-      // Save immediately
       await AsyncStorage.setItem("savedText", text);
       await AsyncStorage.setItem("savedResult", data.title);
 
-      setStatus("Finished");
+      setStatus("Finished " + new Date().toLocaleTimeString());
     } catch (error) {
       setResult("Failed to fetch data.");
-      setStatus("Failed");
+      setStatus("Failed " + new Date().toLocaleTimeString());
     }
   };
 
