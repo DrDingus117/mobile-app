@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useResponsive } from '@/hooks/use-responsive';
 import { Link, useRouter } from 'expo-router';
 
+
 export default function HomeScreen() {
   const { isTablet, isLandscape } = useResponsive();
   const router = useRouter();
