@@ -48,7 +48,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     <view> styles=(styles.container)>
      <Button>
       onPress={requestPermissions}
-      
+      title=)(enable $Platform.OS 
 
 
      />
