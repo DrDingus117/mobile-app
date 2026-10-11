@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AppState,
   AppStateStatus,
@@ -14,77 +14,15 @@ export default function AppStateScreen() {
   const [text, setText] = useState("");
   const [result, setResult] = useState("No data fetched yet.");
   const [status, setStatus] = useState("Idle");
+  const [appStateLabel, setAppStateLabel] = useState<AppStateStatus>(
+    AppState.currentState
+  );
+  const [loaded, setLoaded] = useState(false);
 
   const appState = useRef(AppState.currentState);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load saved data and start polling
-  useEffect(() => {
-    loadData();
-    startPolling();
-
-    return () => {
-      stopPolling();
-    };
-  }, []);
-
-  // Save text whenever it changes
-  useEffect(() => {
-    AsyncStorage.setItem("savedText", text);
-  }, [text]);
-
-  // Save fetched result whenever it changes
-  useEffect(() => {
-    AsyncStorage.setItem("savedResult", result);
-  }, [result]);
-
-  // Listen for app state changes
-  useEffect(() => {
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange
-    );
-
-    return () => subscription.remove();
-  }, []);
-
-  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-    if (
-      appState.current === "active" &&
-      (nextAppState === "background" || nextAppState === "inactive")
-    ) {
-      stopPolling();
-      setStatus("Paused");
-    }
-
-    if (
-      appState.current.match(/inactive|background/) &&
-      nextAppState === "active"
-    ) {
-      await loadData();
-      startPolling();
-      setStatus("Resumed");
-    }
-
-    appState.current = nextAppState;
-  };
-
-  const startPolling = () => {
-    if (pollingRef.current) return;
-
-    pollingRef.current = setInterval(() => {
-      fetchData();
-    }, 5000);
-  };
-
-  const stopPolling = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  };
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const savedText = await AsyncStorage.getItem("savedText");
       const savedResult = await AsyncStorage.getItem("savedResult");
@@ -98,10 +36,12 @@ export default function AppStateScreen() {
       }
     } catch (e) {
       console.log("Error loading data:", e);
+    } finally {
+      setLoaded(true);
     }
-  };
+  }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setStatus("Fetching... " + new Date().toLocaleTimeString());
 
     try {
@@ -112,16 +52,84 @@ export default function AppStateScreen() {
       const data = await response.json();
 
       setResult(data.title);
-
-      await AsyncStorage.setItem("savedText", text);
-      await AsyncStorage.setItem("savedResult", data.title);
-
       setStatus("Finished " + new Date().toLocaleTimeString());
-    } catch (error) {
+    } catch {
       setResult("Failed to fetch data.");
       setStatus("Failed " + new Date().toLocaleTimeString());
     }
-  };
+  }, []);
+
+  const startPolling = useCallback(() => {
+    if (pollingRef.current) return;
+
+    pollingRef.current = setInterval(() => {
+      fetchData();
+    }, 5000);
+  }, [fetchData]);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const handleAppStateChange = useCallback(
+    (nextAppState: AppStateStatus) => {
+      if (
+        appState.current === "active" &&
+        (nextAppState === "background" || nextAppState === "inactive")
+      ) {
+        stopPolling();
+        setStatus("Paused");
+      }
+
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        loadData();
+        startPolling();
+        setStatus("Resumed");
+      }
+
+      appState.current = nextAppState;
+      setAppStateLabel(nextAppState);
+    },
+    [loadData, startPolling, stopPolling]
+  );
+
+  // Load saved data and start polling
+  useEffect(() => {
+    loadData();
+    startPolling();
+
+    return () => {
+      stopPolling();
+    };
+  }, [loadData, startPolling, stopPolling]);
+
+  // Listen for app state changes (only once)
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+
+    return () => subscription.remove();
+  }, [handleAppStateChange]);
+
+  // Save text whenever it changes (after the first load finishes)
+  useEffect(() => {
+    if (!loaded) return;
+    AsyncStorage.setItem("savedText", text).catch(() => {});
+  }, [text, loaded]);
+
+  // Save fetched result whenever it changes (after the first load finishes)
+  useEffect(() => {
+    if (!loaded) return;
+    AsyncStorage.setItem("savedResult", result).catch(() => {});
+  }, [result, loaded]);
 
   return (
     <View style={styles.container}>
@@ -145,7 +153,7 @@ export default function AppStateScreen() {
 
       <Text style={styles.text}>Status: {status}</Text>
 
-      <Text style={styles.text}>App State: {appState.current}</Text>
+      <Text style={styles.text}>App State: {appStateLabel}</Text>
     </View>
   );
 }

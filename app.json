@@ -12,6 +12,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.marcus.mobileapp",
+      "permissions": ["RECEIVE_BOOT_COMPLETED"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,7 +45,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+          "locationAlwaysAndWhenInUsePermission": "Walk Tracker records your location (latitude, longitude, date and time) only while a walk is being tracked, including when the app is in the background. Data is stored on this device.",
+          "locationWhenInUsePermission": "Walk Tracker uses your location while you track a walk.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true

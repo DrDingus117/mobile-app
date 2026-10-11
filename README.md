@@ -1,50 +1,55 @@
-# Welcome to your Expo app 👋
+# Walk Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile walking tracker built with Expo (SDK 57), `expo-location` and `expo-task-manager`. It shows your current coordinates, records your location during a walk (including while the app is minimized), and saves the records on the device.
 
-## Get started
+## Features
+- Get the current latitude and longitude
+- Start, pause, resume and stop a walk
+- Background tracking through an `expo-task-manager` task and an Android foreground service
+- Saved location records (latitude, longitude, date and time) that persist after the app is closed, stored in SQLite
+- Privacy notice shown on the tracking screen
+- Clear message when location permission is denied
 
-1. Install dependencies
+## Privacy
+- The app collects latitude, longitude, date and time.
+- Location is collected only while a walk is being tracked.
+- Records are stored locally on the device and are never uploaded.
+- Tracking can be paused or stopped at any time. Stopping ends all foreground and background updates.
 
-   ```bash
-   npm install
-   ```
+## Setup
+Background location does **not** work in Expo Go, so a development build is required.
 
-2. Start the app
+Requirements: Node.js, Android Studio with the Android SDK, `ANDROID_HOME` set, and an Android phone with USB debugging on (or an emulator).
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+npm install
+npx expo prebuild --platform android
+npx expo run:android
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The first build takes several minutes. After it installs, open the **Walk** tab.
 
-## Learn more
+### Running on web
+`npx expo start --web` runs the app in a browser. On web, only **Get Location** works, because browsers don't support background tracking.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Testing checklist
+Tested on a Samsung Galaxy S23 FE (Android) with a development build.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| # | Scenario | How to test | Result |
+|---|----------|-------------|--------|
+| 1 | Permission approved | Tap Get Location and allow | Pass: coordinates shown |
+| 2 | Permission denied | Set Location to "Don't allow" in settings, tap Get Location | Pass: "Location access is required..." message shown |
+| 3 | App open and tracking | Tap Start Walk, walk around | Pass: status TRACKING, records added |
+| 4 | App minimized | Start a walk, press Home for a few minutes, reopen | Pass: records added while minimized |
+| 5 | Pause and resume | Tap Pause, then Resume | Pass: no records while paused, recording continues on resume |
+| 6 | Stopped | Tap Stop Walk | Pass: status IDLE, background updates stop |
+| 7 | Closed and reopened | Swipe the app away and reopen | Pass: saved records still listed |
 
-## Join the community
+Screenshots are in the `Scrrenshots for assignment` folder.
 
-Join our community of developers creating universal apps.
+## Tech
+Expo SDK 57, Expo Router, `expo-location`, `expo-task-manager`, `expo-sqlite`.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+`metro.config.js` stops the web build from loading `expo-sqlite`, which needs extra setup on web. Tracking and saved records are phone-only.
+
+I was in a bit of a rush getting this done. That's why It'll most likely be late.
