@@ -51,5 +51,3 @@ Screenshots are in the `Scrrenshots for assignment` folder.
 Expo SDK 57, Expo Router, `expo-location`, `expo-task-manager`, `expo-sqlite`.
 
 `metro.config.js` stops the web build from loading `expo-sqlite`, which needs extra setup on web. Tracking and saved records are phone-only.
-
-I was in a bit of a rush getting this done.

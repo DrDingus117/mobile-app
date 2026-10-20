@@ -1,14 +1,69 @@
+import Constants from 'expo-constants';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import * as SQLite from 'expo-sqlite';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, FlatList, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('myNotificationChannel', {
+      name: 'A channel is needed for the permissions prompt to appear',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+  if (finalStatus !== 'granted') {
+    alert('Failed to get push token for push notification!');
+    return;
+  }
+  // Learn more about projectId:
+  // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+  // EAS projectId is used here.
+  try {
+    const projectId =
+      Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    if (!projectId) {
+      throw new Error('Project ID not found');
+    }
+    token = (
+      await Notifications.getExpoPushTokenAsync({
+        projectId,
+      })
+    ).data;
+    console.log(token);
+  } catch (e) {
+    token = `${e}`;
+  }
+
+  return token;
+}
+
 const TASK_NAME = 'walk-location-task';
 const OLD_TASK_NAME = 'background-location-task';
 const isWeb = Platform.OS === 'web';
-
 type WalkState = 'idle' | 'tracking' | 'paused';
 type WalkRecord = { id: number; latitude: number; longitude: number; timestamp: number };
 
@@ -106,6 +161,10 @@ export default function WalkScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [records, setRecords] = useState<WalkRecord[]>([]);
   const [message, setMessage] = useState('');
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+  
 
   const refresh = useCallback(async () => {
     if (isWeb) return;
@@ -137,6 +196,30 @@ export default function WalkScreen() {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    async function setupNotifications() {
+      registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
+
+        if (Platform.OS === 'android') {
+          Notifications.getNotificationChannelsAsync().then(value => setChannels(value ?? []));
+        }
+        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+          setNotification(notification);
+        });
+
+        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+          console.log(response);
+        });
+
+        return () => {
+          notificationListener.remove();
+          responseListener.remove();
+        };
+    }
+
+    // calling the async function to setup notifications
+    setupNotifications();
+  }, []);
   const onGetLocation = async () => {
     const fg = await Location.requestForegroundPermissionsAsync();
     if (fg.status !== 'granted') {
