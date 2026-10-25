@@ -1,5 +1,5 @@
-import { Breakpoint } from '@/types/breakpoint';
-import { useWindowDimensions } from 'react-native';
+import { Breakpoint } from "@/types/breakpoint";
+import { useWindowDimensions } from "react-native";
 
 export function useResponsive() {
   const { width, height } = useWindowDimensions();
@@ -8,12 +8,12 @@ export function useResponsive() {
   const isDesktop = width >= 1024;
   const isLandscape = width > height;
 
-  let breakpoint: Breakpoint = 'phone';
-
+  let breakpoint: Breakpoint = "phone";
+  if (isTablet) {
+    breakpoint = "tablet";
+  }
   if (isDesktop) {
-    breakpoint = 'desktop';
-  } else if (isTablet) {
-    breakpoint = 'tablet';
+    breakpoint = "desktop";
   }
 
   return {
