@@ -1,7 +1,7 @@
 import * as Device from 'expo-device';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import * as Linking from 'expo-linking';
 import { AnimatedIcon } from '@/components/animated-icon';
 import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
@@ -26,6 +26,9 @@ function getDevMenuHint() {
       press <ThemedText type="code">{shortcut}</ThemedText>
     </ThemedText>
   );
+
+  export default function Home() {
+  const url = Linking.useLinkingURL();  
 }
 
 export default function HomeScreen() {
